@@ -10,35 +10,35 @@
 // Temporary OBJ loader — just returns multiple simple triangles
 Object3D loadOBJ(const std::string& path)
 {
-	(void)path;
-	Object3D object;
+	(void) path;
+    Object3D cube;
 
-	// Mesh 1: red triangle
-	Mesh mesh1;
-	mesh1.vertices =
-	{
-		 0.232407,  1.119982,  1.133819,   1.0f, 0.0f, 0.0f,  // top red
-		 0.232406,  1.119982,  1.602814,   1.0f, 0.0f, 0.0f,  // left red
-		 0.232407, -0.294496,  2.297937,   1.0f, 0.0f, 0.0f   // right red
-	};
-	mesh1.textureID = 0;       // no texture for now
-	mesh1.setup();
-	object.meshes.push_back(std::move(mesh1));
+    // 8 corner vertices
+    cube.vertices = {
+        -0.5f, -0.5f, -0.5f, // 0
+         0.5f, -0.5f, -0.5f, // 1
+         0.5f,  0.5f, -0.5f, // 2
+        -0.5f,  0.5f, -0.5f, // 3
+        -0.5f, -0.5f,  0.5f, // 4
+         0.5f, -0.5f,  0.5f, // 5
+         0.5f,  0.5f,  0.5f, // 6
+        -0.5f,  0.5f,  0.5f  // 7
+    };
 
-	// Mesh 2: green triangle
-	Mesh mesh2;
-	mesh2.vertices = {
-		-0.227403, 1.104268, 0.408501,    0.0f, 1.0f, 0.0f,
-		-0.227403, 0.507336, 0.901477,   0.0f, 1.0f, 0.0f,
-		 0.232406, -1.222569, 1.497195,   0.0f, 1.0f, 0.0f
-	};
-	mesh2.textureID = 0;
-	mesh2.setup();
-	object.meshes.push_back(std::move(mesh2));
+    // 12 triangles
+    cube.triangles = {
+        0, 1, 2, 2, 3, 0, // back
+        4, 5, 6, 6, 7, 4, // front
+        0, 3, 7, 7, 4, 0, // left
+        1, 5, 6, 6, 2, 1, // right
+        0, 1, 5, 5, 4, 0, // bottom
+        3, 2, 6, 6, 7, 3  // top
+    };
 
-	return object;
+    return cube;
 }
 
+/*
 // Parse the obj file into tirangle of vertex
 Mesh parseOBJ(const std::string& filepath)
 {
@@ -96,4 +96,4 @@ Mesh parseOBJ(const std::string& filepath)
     Mesh mesh(final_vertices);
     mesh.setup();
     return mesh;
-}
+}*/
