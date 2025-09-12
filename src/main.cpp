@@ -5,6 +5,7 @@
 #include "window.hpp"
 #include "mesh.hpp"
 #include "objloader.hpp"
+#include "shaders.hpp"
 
 int main() {
 	GLFWwindow* window = createWindow(800, 600, "OpenGL Multiple Files");
@@ -64,29 +65,8 @@ void main()
     FragColor = vec4(1.0, 0.5, 0.2, 1.0); // orange color
 }
 )";
-GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-glCompileShader(vertexShader);
 
-// Check for compile errors...
-
-GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-glCompileShader(fragmentShader);
-
-// Check for compile errors...
-
-GLuint shaderProgram = glCreateProgram();
-glAttachShader(shaderProgram, vertexShader);
-glAttachShader(shaderProgram, fragmentShader);
-glLinkProgram(shaderProgram);
-
-// Check for link errors...
-
-glDeleteShader(vertexShader);
-glDeleteShader(fragmentShader);
-
-//
+Shader shader(vertexShaderSource, fragmentShaderSource);
 //
 
 	while (!glfwWindowShouldClose(window)) {
@@ -96,7 +76,7 @@ glDeleteShader(fragmentShader);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//temp shader usage
-		glUseProgram(shaderProgram);
+		shader.use();
 		//
 		glBindVertexArray(VAO);
 		// maybe need to change this to every form possible

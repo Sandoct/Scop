@@ -18,7 +18,7 @@ FLAGS = -lglfw -lGLEW -lGL
 
 NAME = Scop
 
-SRC = src/main.cpp src/window.cpp src/mesh.cpp src/objloader.cpp\
+SRC = src/main.cpp src/window.cpp src/mesh.cpp src/objloader.cpp src/shaders.cpp\
 
 OBJ	= $(SRC:.cpp=.o)
 
