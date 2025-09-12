@@ -1,0 +1,9 @@
+# Ignore compiled files
+*.class
+*.o
+
+# Ignore swp
+*.swp
+
+# Ignore environment files
+.env
