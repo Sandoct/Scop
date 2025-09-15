@@ -9,14 +9,21 @@
 #include "meshBuffer.hpp"
 #include "matrix4.hpp"
 
-int main() {
+int main()
+{
 	GLFWwindow* window = createWindow(800, 600, "OpenGL Multiple Files");
 	if (!window)
 		return -1;
 
 	initGLEW();
 
-	Object3D myObject = loadOBJ("dummy.obj");
+	Object3D myObject;
+
+	try {
+		myObject = loadOBJ("resources/42.obj");
+	} catch (const std::exception& e) {
+		std::cerr << "Error loading OBJ: " << e.what() << std::endl;
+	}
 	MeshBuffer	buff = MeshBuffer(myObject.vertices, myObject.triangles);
 // tmp sahder setup need to create own file
 const char* vertexShaderSource = R"(
@@ -34,9 +41,17 @@ const char* fragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
 
-void main()
-{
-    FragColor = vec4(1.0, 0.5, 0.2, 1.0); // orange color
+void main() {
+    int id = gl_PrimitiveID % 6; // 6 different colors
+    vec3 colors[6] = vec3[6](
+        vec3(1, 0, 0), // red
+        vec3(0, 1, 0), // green
+        vec3(0, 0, 1), // blue
+        vec3(1, 1, 0), // yellow
+        vec3(1, 0, 1), // magenta
+        vec3(0, 1, 1)  // cyan
+    );
+    FragColor = vec4(colors[id], 1.0);
 }
 )";
 
@@ -74,8 +89,7 @@ Shader shader(vertexShaderSource, fragmentShaderSource);
 		//matrix p2
 		int mvpLoc = glGetUniformLocation(shader.ID, "MVP");
 		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, mvp.m);
-		// maybe need to change this to every form possible
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, myObject.triangles.size(), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

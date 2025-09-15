@@ -1,13 +1,14 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <array>
 #include <vector>
-#include <regex>
+#include <cfloat>
 #include <iostream>
 #include "mesh.hpp"
 #include "objloader.hpp"
 
-// Temporary OBJ loader — just returns multiple simple triangles
+/* Temporary OBJ loader — just returns multiple simple triangles
 Object3D loadOBJ(const std::string& path)
 {
 	(void) path;
@@ -38,62 +39,85 @@ Object3D loadOBJ(const std::string& path)
     return cube;
 }
 
-/*
-// Parse the obj file into tirangle of vertex
-Mesh parseOBJ(const std::string& filepath)
+*/
+Object3D loadOBJ(const std::string& path)
 {
-    std::ifstream file(filepath);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open OBJ file: " << filepath << "\n";
-        return Mesh();
-    }
+	std::ifstream file(path);
+	if (!file.is_open())
+		throw std::runtime_error("Could not open file");
 
-    std::vector<Vec3> temp_vertices;
-    std::vector<float> final_vertices;
+	Object3D obj;
+	std::vector<std::array<float, 3>> temp_vertices;
+	std::string line;
 
-    std::string line;
-    std::regex vertex_regex(R"(v\s+([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+))");
-    std::regex face_regex(R"(f\s+(\d+)\s+(\d+)\s+(\d+)(?:\s+(\d+))?)");
-    // captures either 3 or 4 vertex indices
+	while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string prefix;
+        ss >> prefix;
 
-    while (std::getline(file, line)) {
-        std::smatch match;
-
-        // Vertex line: v x y z
-        if (std::regex_match(line, match, vertex_regex)) {
-            float x = std::stof(match[1]);
-            float y = std::stof(match[2]);
-            float z = std::stof(match[3]);
+        if (prefix == "v")
+		{
+            float x, y, z;
+            if (!(ss >> x >> y >> z))
+                throw std::runtime_error("Invalid vertex line: " + line);
             temp_vertices.push_back({x, y, z});
         }
+        else if (prefix == "f")
+		{
+			std::vector<unsigned int> faceVertices;
+			unsigned int idx;
 
-        // Face line: f i j k or f i j k l
-        else if (std::regex_match(line, match, face_regex)) {
-            int i = std::stoi(match[1]) - 1;
-            int j = std::stoi(match[2]) - 1;
-            int k = std::stoi(match[3]) - 1;
+			// read all vertex indices in this face
+			while (ss >> idx)
+			{
+				if (idx == 0 || idx > temp_vertices.size())
+					throw std::runtime_error("Face references non-existent vertex: " + line);
+				faceVertices.push_back(idx - 1); // OBJ indices are 1-based
+			}
 
-            // Triangle 1
-            for (int idx : {i, j, k}) {
-                final_vertices.push_back(temp_vertices[idx].x);
-                final_vertices.push_back(temp_vertices[idx].y);
-                final_vertices.push_back(temp_vertices[idx].z);
-            }
+			if (faceVertices.size() < 3)
+				throw std::runtime_error("Face has fewer than 3 vertices: " + line);
 
-            // Check if quad (4th vertex exists)
-            if (match[4].matched) {
-                int l = std::stoi(match[4]) - 1;
-                // Triangle 2: i, k, l
-                for (int idx : {i, k, l}) {
-                    final_vertices.push_back(temp_vertices[idx].x);
-                    final_vertices.push_back(temp_vertices[idx].y);
-                    final_vertices.push_back(temp_vertices[idx].z);
-                }
-            }
+			// Triangulate the polygon
+			for (size_t i = 1; i < faceVertices.size() - 1; ++i)
+			{
+				obj.triangles.push_back(faceVertices[0]);
+				obj.triangles.push_back(faceVertices[i]);
+				obj.triangles.push_back(faceVertices[i + 1]);
+			}
         }
+		else if (prefix == "vt" || prefix == "vn" || prefix == "usemtl" || prefix == "mtllib")
+		{
+			std::cerr << "Warning: ignoring line: " << line << std::endl;
+		}
+        // ignore unsupported lines
     }
 
-    Mesh mesh(final_vertices);
-    mesh.setup();
-    return mesh;
-}*/
+	if (temp_vertices.empty())
+        throw std::runtime_error("No vertices found.");
+
+    // ---- Centering the object ----
+    float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
+    float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
+
+    for (auto& v : temp_vertices) {
+        minX = std::min(minX, v[0]);
+        minY = std::min(minY, v[1]);
+        minZ = std::min(minZ, v[2]);
+        maxX = std::max(maxX, v[0]);
+        maxY = std::max(maxY, v[1]);
+        maxZ = std::max(maxZ, v[2]);
+    }
+
+    float centerX = (minX + maxX) / 2.0f;
+    float centerY = (minY + maxY) / 2.0f;
+    float centerZ = (minZ + maxZ) / 2.0f;
+
+    for (auto& v : temp_vertices) {
+        obj.vertices.push_back(v[0] - centerX);
+        obj.vertices.push_back(v[1] - centerY);
+        obj.vertices.push_back(v[2] - centerZ);
+    }
+
+    return obj;
+}
