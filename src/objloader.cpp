@@ -100,7 +100,8 @@ Object3D loadOBJ(const std::string& path)
     float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
     float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
 
-    for (auto& v : temp_vertices) {
+    for (auto& v : temp_vertices)
+	{
         minX = std::min(minX, v[0]);
         minY = std::min(minY, v[1]);
         minZ = std::min(minZ, v[2]);
@@ -113,10 +114,15 @@ Object3D loadOBJ(const std::string& path)
     float centerY = (minY + maxY) / 2.0f;
     float centerZ = (minZ + maxZ) / 2.0f;
 
-    for (auto& v : temp_vertices) {
+    for (auto& v : temp_vertices)
+	{
         obj.vertices.push_back(v[0] - centerX);
         obj.vertices.push_back(v[1] - centerY);
         obj.vertices.push_back(v[2] - centerZ);
+		//temp color
+		obj.vertices.push_back(1.0f); // R
+		obj.vertices.push_back(1.0f); // G
+		obj.vertices.push_back(1.0f); // B
     }
 
     return obj;

@@ -1,5 +1,7 @@
 #include "shaders.hpp"
 
+
+
 Shader::Shader(const char* vertexSrc, const char* fragmentSrc) {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSrc, nullptr);

@@ -9,8 +9,10 @@
 #include "meshBuffer.hpp"
 #include "matrix4.hpp"
 
-int main()
+int main(int argc, char** argv)
 {
+	if (argc != 2)
+		return -1;
 	GLFWwindow* window = createWindow(800, 600, "OpenGL Multiple Files");
 	if (!window)
 		return -1;
@@ -20,7 +22,7 @@ int main()
 	Object3D myObject;
 
 	try {
-		myObject = loadOBJ("resources/42.obj");
+		myObject = loadOBJ(argv[1]);
 	} catch (const std::exception& e) {
 		std::cerr << "Error loading OBJ: " << e.what() << std::endl;
 	}
@@ -28,34 +30,32 @@ int main()
 // tmp sahder setup need to create own file
 const char* vertexShaderSource = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec3 aPos;   // vertex position
+layout (location = 1) in vec3 aColor; // vertex color
+
+out vec3 vertexColor; // pass color to fragment shader
 
 uniform mat4 MVP;
 
-void main() {
-    gl_Position = MVP * vec4(aPos, 1.0);
+void main()
+{
+	gl_Position = MVP * vec4(aPos, 1.0);
+	vertexColor = aColor; // forward the color
 }
 )";
 // Fragment Shader source
 const char* fragmentShaderSource = R"(
 #version 330 core
+in vec3 vertexColor;    // input from vertex shader
 out vec4 FragColor;
 
-void main() {
-    int id = gl_PrimitiveID % 6; // 6 different colors
-    vec3 colors[6] = vec3[6](
-        vec3(1, 0, 0), // red
-        vec3(0, 1, 0), // green
-        vec3(0, 0, 1), // blue
-        vec3(1, 1, 0), // yellow
-        vec3(1, 0, 1), // magenta
-        vec3(0, 1, 1)  // cyan
-    );
-    FragColor = vec4(colors[id], 1.0);
+void main()
+{
+	FragColor = vec4(vertexColor, 1.0); // use per-vertex color
 }
 )";
 
-Shader shader(vertexShaderSource, fragmentShaderSource);
+	Shader shader(vertexShaderSource, fragmentShaderSource);
 //
 
 	while (!glfwWindowShouldClose(window)) {

@@ -20,8 +20,11 @@ MeshBuffer::MeshBuffer(const std::vector<float>& vertices,
 
     // Tell OpenGL how to interpret vertex data
     // For now: assume each vertex is 3 floats (x, y, z)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
     // Unbind (VAO keeps the state)
     glBindVertexArray(0);
