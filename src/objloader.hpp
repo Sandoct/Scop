@@ -1,7 +1,25 @@
 #pragma once
 #include <string>
-#include "mesh.hpp"
 #include <vector>
+#include <array>
+#include <map>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <cfloat>
+#include <iostream>
+#include <cstdlib>
+
+struct Material {
+    std::string name;
+	std::array<float, 3>	Ka; // ambient
+	std::array<float, 3>	Kd; // diffuse
+	std::array<float, 3>	Ks; // specular
+	float	Ns;    // shininess
+	float	Ni;    // shininess
+	float	Tr;    // transparency
+	int		illum;
+};
 
 class Object3D
 {
@@ -10,6 +28,9 @@ class Object3D
 		std::vector<float>		defaultColors;
 		std::vector<float>		materialColors;
 		std::vector<unsigned int>	triangles;
+
+		std::map<std::string, Material> materials;
+		std::string currentMaterial;
 };
 
 Object3D loadOBJ(const std::string& path);

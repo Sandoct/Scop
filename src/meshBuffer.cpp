@@ -1,48 +1,50 @@
 #include "meshBuffer.hpp"
-#include <GL/glew.h> // Needed for glGenBuffers, glBindBuffer, etc.
 
 MeshBuffer::MeshBuffer(const std::vector<float>& vertices,
-                       const std::vector<unsigned int>& indices)
+                       const std::vector<unsigned int>& indices,
+                       const std::vector<float>& colors)
 {
-    // Generate and bind VAO
+    // Generate buffers
     glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &CBO);
+    glGenBuffers(1, &EBO);
+
     glBindVertexArray(VAO);
 
-    // Generate and bind VBO
-    glGenBuffers(1, &VBO);
+    // Vertex positions
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
 
-    // Generate and bind EBO (indices)
-    glGenBuffers(1, &EBO);
+    // Colors
+    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), colors.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(1);
+
+    // Indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // Tell OpenGL how to interpret vertex data
-    // For now: assume each vertex is 3 floats (x, y, z)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-    // Unbind (VAO keeps the state)
     glBindVertexArray(0);
 }
 
 MeshBuffer::~MeshBuffer()
 {
-    glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &CBO);
     glDeleteVertexArrays(1, &VAO);
 }
 
-void MeshBuffer::bind() const
+void MeshBuffer::bind() const { glBindVertexArray(VAO); }
+void MeshBuffer::unbind() const { glBindVertexArray(0); }
+
+void MeshBuffer::updateColors(const std::vector<float>& colors)
 {
-    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, colors.size() * sizeof(float), colors.data());
 }
 
-void MeshBuffer::unbind() const
-{
-    glBindVertexArray(0);
-}

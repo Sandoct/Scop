@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "window.hpp"
-#include "mesh.hpp"
 #include "objloader.hpp"
 #include "shaders.hpp"
 #include "meshBuffer.hpp"
@@ -11,7 +10,7 @@
 
 int main(int argc, char** argv)
 {
-	if (argc != 2)
+	if (argc < 2)
 		return -1;
 	GLFWwindow* window = createWindow(800, 600, "OpenGL Multiple Files");
 	if (!window)
@@ -25,33 +24,36 @@ int main(int argc, char** argv)
 		myObject = loadOBJ(argv[1]);
 	} catch (const std::exception& e) {
 		std::cerr << "Error loading OBJ: " << e.what() << std::endl;
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		return -1;
 	}
-	MeshBuffer	buff = MeshBuffer(myObject.vertices, myObject.triangles);
+	MeshBuffer	buff = MeshBuffer(myObject.vertices, myObject.triangles, myObject.defaultColors);
 // tmp sahder setup need to create own file
 const char* vertexShaderSource = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;   // vertex position
-layout (location = 1) in vec3 aColor; // vertex color
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
 
-out vec3 vertexColor; // pass color to fragment shader
+out vec3 vertexColor;
 
 uniform mat4 MVP;
 
 void main()
 {
 	gl_Position = MVP * vec4(aPos, 1.0);
-	vertexColor = aColor; // forward the color
+	vertexColor = aColor;
 }
 )";
 // Fragment Shader source
 const char* fragmentShaderSource = R"(
 #version 330 core
-in vec3 vertexColor;    // input from vertex shader
+in vec3 vertexColor;
 out vec4 FragColor;
 
 void main()
 {
-	FragColor = vec4(vertexColor, 1.0); // use per-vertex color
+	FragColor = vec4(vertexColor, 1.0);
 }
 )";
 
@@ -72,6 +74,20 @@ void main()
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) pos.X += pos.speed; // right
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) pos.Y += pos.speed; // up
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) pos.Y -= pos.speed; // down
+
+		static bool useMtlColors = false;
+		static bool lastTState = false;
+		// Check key
+		bool tPressed = glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS;
+		if (tPressed && !lastTState)
+		{
+			useMtlColors = !useMtlColors;
+			if (useMtlColors)
+				buff.updateColors(myObject.materialColors);
+			else
+				buff.updateColors(myObject.defaultColors);
+		}
+		lastTState = tPressed;
 
 		//matrix
 		static float angle = 0.0f;  // keeps value across frames

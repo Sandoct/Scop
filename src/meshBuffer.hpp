@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <GL/glew.h>
 
 class MeshBuffer
 {
@@ -7,19 +8,19 @@ class MeshBuffer
 		unsigned int VAO;
 		unsigned int VBO;
 		unsigned int EBO;
+		unsigned int CBO;
 
 	public:
-		// Constructor: takes vertices and indices (triangles)
 		MeshBuffer(const std::vector<float>& vertices,
-				const std::vector<unsigned int>& indices);
-		// Destructor: cleans up GPU resources
+				const std::vector<unsigned int>& indices,
+				const std::vector<float>& colors);
+
 		~MeshBuffer();
 
-		// Binds this buffer (for drawing)
 		void bind() const;
-
-		// Unbinds everything
 		void unbind() const;
+
+		void updateColors(const std::vector<float>& colors);
 
 		// For now, disable copying (we can add move semantics later)
 		MeshBuffer(const MeshBuffer&) = delete;
