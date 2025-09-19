@@ -1,4 +1,5 @@
 #include "objloader.hpp"
+#include "texloader.hpp"
 
 void loadMTL(const std::string& mtlPath, Object3D& obj)
 {
@@ -48,11 +49,21 @@ void loadMTL(const std::string& mtlPath, Object3D& obj)
 		}
 		else if (tag == "Tr" || tag == "d")
 		{
-			iss >> mat.Ni;
+			iss >> mat.Tr;
 		}
 		else if (tag == "illum")
 		{
 			iss >> mat.illum;
+		}
+		else if (tag == "map_Kd")
+		{
+			iss >> mat.map_Kd;
+			try {
+				mat.textureID = loadTexture("resources/" + mat.map_Kd); // load with stb_image
+			} catch (std::exception& e) {
+				std::cerr << "Failed to load texture: " << mat.map_Kd << " (" << e.what() << ")" << std::endl;
+				mat.textureID = 0;
+			}
 		}
 	}
 	if (hasMat)
@@ -112,7 +123,8 @@ Object3D loadOBJ(const std::string& path)
             std::vector<unsigned int> faceVertices;
             unsigned int idx;
 
-            while (ss >> idx) {
+            while (ss >> idx)
+			{
                 if (idx == 0 || idx > temp_vertices.size())
                     throw std::runtime_error("Face references non-existent vertex: " + line);
                 faceVertices.push_back(idx-1);
@@ -172,21 +184,38 @@ Object3D loadOBJ(const std::string& path)
     if (temp_vertices.empty())
         throw std::runtime_error("No vertices found.");
 
-    // --- Center object ---
-    float minX=FLT_MAX, minY=FLT_MAX, minZ=FLT_MAX;
-    float maxX=-FLT_MAX, maxY=-FLT_MAX, maxZ=-FLT_MAX;
-    for (auto &v : temp_vertices) {
-        minX = std::min(minX, v[0]); minY = std::min(minY, v[1]); minZ = std::min(minZ, v[2]);
-        maxX = std::max(maxX, v[0]); maxY = std::max(maxY, v[1]); maxZ = std::max(maxZ, v[2]);
+	// ---- Center object ----
+    float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
+    float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
+    for (auto& v : temp_vertices) {
+        minX = std::min(minX, v[0]);
+        minY = std::min(minY, v[1]);
+        minZ = std::min(minZ, v[2]);
+        maxX = std::max(maxX, v[0]);
+        maxY = std::max(maxY, v[1]);
+        maxZ = std::max(maxZ, v[2]);
     }
-    float centerX = (minX+maxX)/2.0f;
-    float centerY = (minY+maxY)/2.0f;
-    float centerZ = (minZ+maxZ)/2.0f;
+    float centerX = (minX + maxX) / 2.0f;
+    float centerY = (minY + maxY) / 2.0f;
+    float centerZ = (minZ + maxZ) / 2.0f;
 
-    for (size_t i=0;i<obj.vertices.size();i+=3) {
-        obj.vertices[i+0] -= centerX;
-        obj.vertices[i+1] -= centerY;
-        obj.vertices[i+2] -= centerZ;
+    // Adjust all vertices + generate UVs
+    obj.texCoords.reserve(obj.vertices.size()/3 * 2);
+    for (size_t i = 0; i < obj.vertices.size(); i+=3) {
+        float x = obj.vertices[i+0] - centerX;
+        float y = obj.vertices[i+1] - centerY;
+        float z = obj.vertices[i+2] - centerZ;
+
+        obj.vertices[i+0] = x;
+        obj.vertices[i+1] = y;
+        obj.vertices[i+2] = z;
+
+        // Procedural UV mapping (XZ projection)
+        float u = (z - centerZ) / (maxZ - minZ);
+        float v = (y - minY) / (maxY - minY);
+
+        obj.texCoords.push_back(u);
+        obj.texCoords.push_back(v);
     }
 
     return obj;

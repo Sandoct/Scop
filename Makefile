@@ -6,7 +6,7 @@
 #    By: r <gpouzet@42.fr>                          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/07 13:46:36 by r                 #+#    #+#              #
-#    Updated: 2025/09/17 22:26:41 by gpouzet          ###   ########.fr        #
+#    Updated: 2025/09/19 16:57:15 by gpouzet          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ FLAGS = -lglfw -lGLEW -lGL
 
 NAME = Scop
 
-SRC = src/main.cpp src/window.cpp src/objloader.cpp src/shaders.cpp src/meshBuffer.cpp src/matrix4.cpp\
+SRC = src/main.cpp src/window.cpp src/objloader.cpp src/shaders.cpp src/meshBuffer.cpp src/matrix4.cpp src/texloader.cpp\
 
 OBJ	= $(SRC:.cpp=.o)
 

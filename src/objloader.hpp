@@ -9,6 +9,7 @@
 #include <cfloat>
 #include <iostream>
 #include <cstdlib>
+#include <GL/glew.h>
 
 struct Material {
     std::string name;
@@ -19,12 +20,16 @@ struct Material {
 	float	Ni;    // shininess
 	float	Tr;    // transparency
 	int		illum;
+
+	std::string map_Kd;
+    GLuint textureID = 0;
 };
 
 class Object3D
 {
 	public:
 		std::vector<float>		vertices;
+		std::vector<float>		texCoords;
 		std::vector<float>		defaultColors;
 		std::vector<float>		materialColors;
 		std::vector<unsigned int>	triangles;
