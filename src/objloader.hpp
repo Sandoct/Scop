@@ -30,6 +30,7 @@ class Object3D
 	public:
 		std::vector<float>		vertices;
 		std::vector<float>		texCoords;
+		std::vector<float>		normals;
 		std::vector<float>		defaultColors;
 		std::vector<float>		materialColors;
 		std::vector<unsigned int>	triangles;

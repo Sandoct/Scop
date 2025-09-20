@@ -28,33 +28,19 @@ void loadMTL(const std::string& mtlPath, Object3D& obj)
 			hasMat = true;
 		}
 		else if (tag == "Ka")
-		{
 			iss >> mat.Ka[0] >> mat.Ka[1] >> mat.Ka[2];
-		}
 		else if (tag == "Kd")
-		{
 			iss >> mat.Kd[0] >> mat.Kd[1] >> mat.Kd[2];
-		}
 		else if (tag == "Ks")
-		{
 			iss >> mat.Ks[0] >> mat.Ks[1] >> mat.Ks[2];
-		}
 		else if (tag == "Ns")
-		{
 			iss >> mat.Ns;
-		}
 		else if (tag == "Ni")
-		{
 			iss >> mat.Ni;
-		}
 		else if (tag == "Tr" || tag == "d")
-		{
 			iss >> mat.Tr;
-		}
 		else if (tag == "illum")
-		{
 			iss >> mat.illum;
-		}
 		else if (tag == "map_Kd")
 		{
 			iss >> mat.map_Kd;
@@ -83,6 +69,8 @@ Object3D loadOBJ(const std::string& path)
 	obj.materials["__default"] = defaultMat;
 	obj.currentMaterial = "__default";
     std::vector<std::array<float,3>> temp_vertices;
+    std::vector<std::array<float,2>> temp_coords;
+    std::vector<std::array<float,3>> temp_normals;
     std::string line;
 
     // --- Load vertices ---
@@ -104,6 +92,20 @@ Object3D loadOBJ(const std::string& path)
             if (!(ss >> x >> y >> z))
                 throw std::runtime_error("Invalid vertex line: " + line);
             temp_vertices.push_back({x,y,z});
+        }
+		else if (prefix == "vt")
+		{
+            float u,v;
+            if (!(ss >> u >> v))
+                throw std::runtime_error("Invalid vertex coordinates line: " + line);
+            temp_vertices.push_back({u,v});
+        }
+		else if (prefix == "vn")
+		{
+            float x,y,z;
+            if (!(ss >> x >> y >> z))
+                throw std::runtime_error("Invalid vertex line: " + line);
+            temp_normals.push_back({x,y,z});
         }
 		else if (prefix == "usemtl")
 		{
@@ -201,7 +203,8 @@ Object3D loadOBJ(const std::string& path)
 
     // Adjust all vertices + generate UVs
     obj.texCoords.reserve(obj.vertices.size()/3 * 2);
-    for (size_t i = 0; i < obj.vertices.size(); i+=3) {
+    for (size_t i = 0; i < obj.vertices.size(); i+=3)
+	{
         float x = obj.vertices[i+0] - centerX;
         float y = obj.vertices[i+1] - centerY;
         float z = obj.vertices[i+2] - centerZ;
