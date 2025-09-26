@@ -32,16 +32,18 @@ const char* getFragmentShaderSource()
 	in vec3 FragColorIn;
 	in vec2 TexCoord;
 
-	uniform bool useTexture;
-	uniform sampler2D texture1;
+	uniform bool useTexture;      // true if object has Kd_map
+	uniform float blendFactor;     // 0.0 = defaultColor, 1.0 = target (Kd or texture)
+	uniform vec3 MaterialKd;       // Kd from MTL
+	uniform sampler2D texture1;    // Kd_map texture
 
 	out vec4 FragColor;
 
 	void main()
 	{
-		vec4 texColor = texture(texture1, TexCoord);
-		vec4 finalColor = useTexture ? texColor : vec4(FragColorIn, 1.0);
-		FragColor = finalColor;
+		vec4 baseColor = vec4(FragColorIn, 1.0); // default generated color
+		vec4 targetColor = useTexture ? texture(texture1, TexCoord) : vec4(MaterialKd, 1.0);
+		FragColor = mix(baseColor, targetColor, blendFactor);
 	}
 	)";
 }
@@ -113,4 +115,9 @@ void Shader::setFloat(const std::string& name, float value) const
 void Shader::setMat4(const std::string& name, const float* mat) const
 {
 	glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, mat);
+}
+
+void Shader::setVec3(const std::string &name, float x, float y, float z) const 
+{
+	glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
 }

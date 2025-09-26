@@ -54,40 +54,38 @@ int main(int argc, char** argv)
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) pos.Y += pos.speed; // up
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) pos.Y -= pos.speed; // down
 
-		static bool useTexture = false;
-		static bool lastTState = false;
 
+		buff.updateColors(myObject.defaultColors);
 		// Check key press for texture
+		static bool		hasTexture = false;
+		static bool		useTexture = false;
+		static bool		lastTState = false;
+		static float	blend = 0.0f;
+
 		bool tPressed = glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS;
 		if (tPressed && !lastTState)
-		{
 			useTexture = !useTexture;
-			if (useTexture)
-			{
-				Material& mat = myObject.materials[myObject.currentMaterial];
-				if (mat.textureID != 0)
-				{
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, mat.textureID);
-					shader.use();
-					shader.setInt("texture1", 0);
-				} else
-				{
-					buff.updateColors(myObject.materialColors);
-				}
-			} 
-			else
-			{
-				buff.updateColors(myObject.defaultColors);
-			}
-		}
 		lastTState = tPressed;
+		float	target = useTexture ? 1.0f : 0.0f;
+		float	speed = 0.02f;
+		blend += (target - blend) * speed;
+		//
+		shader.use();
+		// setting up texture if we have one
+		Material& mat = myObject.materials[myObject.currentMaterial];
+		if (mat.textureID != 0)
+		{
+			hasTexture = true;
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, mat.textureID);
+			shader.setInt("texture1", 0);
+		}
 
 		//matrix
 		static float	angle_h = 0.0f;  // keeps value across frames
 		static float	angle_v = 0.0f;  // keeps value across frames
 		static bool		lastRState = false;
-		static bool		rState = false;
+		static bool		rState = true;
 		// Check key press for rotation
 		bool rPressed = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
 		if (rPressed && !lastRState)
@@ -108,10 +106,12 @@ int main(int argc, char** argv)
 
 		// Pass MVP to shader
 		shader.use();
+		shader.setFloat("blendFactor", blend);
 		shader.setMat4("model", model.m);
 		shader.setMat4("view", view.m);
 		shader.setMat4("projection", proj.m);
-		shader.setBool("useTexture", useTexture);
+		shader.setBool("useTexture", hasTexture);
+		shader.setVec3("MaterialKd", mat.Kd[0], mat.Kd[1], mat.Kd[2]);
 
 		buff.bind();
 		glDrawElements(GL_TRIANGLES, myObject.triangles.size(), GL_UNSIGNED_INT, 0);
