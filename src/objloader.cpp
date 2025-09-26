@@ -98,7 +98,7 @@ Object3D loadOBJ(const std::string& path)
             float u,v;
             if (!(ss >> u >> v))
                 throw std::runtime_error("Invalid vertex coordinates line: " + line);
-            temp_vertices.push_back({u,v});
+            temp_coords.push_back({u,v});
         }
 		else if (prefix == "vn")
 		{
@@ -122,25 +122,57 @@ Object3D loadOBJ(const std::string& path)
 		}
         else if (prefix == "f")
 		{
-            std::vector<unsigned int> faceVertices;
-            unsigned int idx;
+			std::vector<unsigned int> vIndices, vtIndices, vnIndices;
+			std::string token;
 
-            while (ss >> idx)
+			while (ss >> token)
 			{
-                if (idx == 0 || idx > temp_vertices.size())
-                    throw std::runtime_error("Face references non-existent vertex: " + line);
-                faceVertices.push_back(idx-1);
-            }
+				unsigned int v = 0, vt = 0, vn = 0;
+				size_t firstSlash = token.find('/');
+				size_t secondSlash = token.find('/', firstSlash + 1);
 
-            if (faceVertices.size() < 3)
+				if (firstSlash == std::string::npos) // f v
+					v = std::stoi(token);
+				else if (secondSlash == std::string::npos)// f v/vt
+				{
+					v  = std::stoi(token.substr(0, firstSlash));
+					vt = std::stoi(token.substr(firstSlash + 1));
+				}
+				else if (secondSlash == firstSlash + 1)// f v//vn
+				{
+					v  = std::stoi(token.substr(0, firstSlash));
+					vn = std::stoi(token.substr(secondSlash + 1));
+				}
+				else // f v/vt/vn
+				{
+					v  = std::stoi(token.substr(0, firstSlash));
+					vt = std::stoi(token.substr(firstSlash + 1, secondSlash - firstSlash - 1));
+					vn = std::stoi(token.substr(secondSlash + 1));
+				}
+
+				if (v > 0 && v <= temp_vertices.size())
+					vIndices.push_back(v - 1);
+				else
+                    throw std::runtime_error("Face references non-existent vertex: " + line);
+				if (vt > 0 && vt <= temp_coords.size())
+					vtIndices.push_back(vt - 1);
+				else
+                    throw std::runtime_error("Face references non-existent vertex (vt): " + line);
+				if (vn > 0 && vn <= temp_normals.size())
+					vnIndices.push_back(vn - 1);
+				else
+                    throw std::runtime_error("Face references non-existent vertex (vn): " + line);
+			}
+
+            if (vIndices.size() < 3)
                 throw std::runtime_error("Face has fewer than 3 vertices: " + line);
 
             // Triangulate polygon
-            for (size_t i=1; i<faceVertices.size()-1; ++i) {
-
-                unsigned int i0 = faceVertices[0];
-                unsigned int i1 = faceVertices[i];
-                unsigned int i2 = faceVertices[i+1];
+			for (size_t i = 1; i < vIndices.size() - 1; ++i)
+			{
+				unsigned int i0 = vIndices[0];
+				unsigned int i1 = vIndices[i];
+				unsigned int i2 = vIndices[i+1];
 
                 // Copy positions (flat triangles)
                 for (unsigned int vi : {i0, i1, i2}) {
