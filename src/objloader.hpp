@@ -1,4 +1,5 @@
 #pragma once
+#include <glad/glad.h>
 #include <string>
 #include <vector>
 #include <array>
@@ -9,7 +10,6 @@
 #include <cfloat>
 #include <iostream>
 #include <cstdlib>
-#include <GL/glew.h>
 
 struct Material {
     std::string name;

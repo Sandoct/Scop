@@ -1,4 +1,4 @@
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -11,16 +11,20 @@
 
 int main(int argc, char** argv)
 {
-	if (argc < 2)
+	if (argc != 2)
 		return -1;
 	GLFWwindow* window = createWindow(800, 600, "OpenGL Multiple Files");
 	if (!window)
 		return -1;
 
-	initGLEW();
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cerr << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
 
+	// creating the obj and trying load it with the .obj
 	Object3D myObject;
-
 	try {
 		myObject = loadOBJ(argv[1]);
 	} catch (const std::exception& e) {
@@ -29,52 +33,14 @@ int main(int argc, char** argv)
 		glfwTerminate();
 		return -1;
 	}
+	// creating mesh from the vertex and face of the object
 	MeshBuffer	buff = MeshBuffer(myObject.vertices, myObject.triangles, myObject.defaultColors, myObject.texCoords);
-// tmp sahder setup need to create own file
-const char* vertexShaderSource = R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-layout (location = 2) in vec2 aTexCoord;
 
-out vec3 FragColorIn;
-out vec2 TexCoord;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-void main()
-{
-    FragColorIn = aColor;
-    TexCoord = aTexCoord;
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-}
-)";
-// Fragment Shader source
-const char* fragmentShaderSource = R"(
-#version 330 core
-in vec3 FragColorIn;
-in vec2 TexCoord;
-
-uniform bool useTexture;
-uniform sampler2D texture1;
-
-out vec4 FragColor;
-
-void main()
-{
-	vec4 texColor = texture(texture1, TexCoord);
-	vec4 finalColor = useTexture ? texColor : vec4(FragColorIn, 1.0);
-	FragColor = finalColor;
-}
-)";
-
-	Shader shader(vertexShaderSource, fragmentShaderSource);
-//
+	// loading shaders
+	Shader shader(getVertexShaderSource(), getFragmentShaderSource());
 
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window); // optional input function
+		processInput(window);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -91,7 +57,7 @@ void main()
 		static bool useTexture = false;
 		static bool lastTState = false;
 
-		// Check key press
+		// Check key press for texture
 		bool tPressed = glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS;
 		if (tPressed && !lastTState)
 		{
@@ -117,12 +83,25 @@ void main()
 		}
 		lastTState = tPressed;
 
-
 		//matrix
-		static float angle = 0.0f;  // keeps value across frames
-		angle += 0.01f;             // small rotation per frame
+		static float	angle_h = 0.0f;  // keeps value across frames
+		static float	angle_v = 0.0f;  // keeps value across frames
+		static bool		lastRState = false;
+		static bool		rState = false;
+		// Check key press for rotation
+		bool rPressed = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
+		if (rPressed && !lastRState)
+			rState = !rState;
+		lastRState = rPressed;
+		if (rState)
+			angle_h += 0.01f;             // small rotation per frame
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) angle_h += 0.03f; // forward
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) angle_h -= 0.03f; // forward
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) angle_v += 0.03f; // forward
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) angle_v -= 0.03f; // forward
 
-		Matrix4 model = Matrix4::multiply(Matrix4::translate(pos.X, pos.Y, pos.Z), Matrix4::rotateY(angle));
+		Matrix4 rotation = Matrix4::multiply(Matrix4::rotateY(angle_h), Matrix4::rotateX(angle_v));
+		Matrix4 model = Matrix4::multiply(Matrix4::translate(pos.X, pos.Y, pos.Z), rotation);
 		Matrix4 view  = Matrix4::translate(0, 0, -3);
 		Matrix4 proj  = Matrix4::perspective(45.0f * M_PI / 180.0f, ((float)800/(float)600), 0.1f, 100.0f);
 

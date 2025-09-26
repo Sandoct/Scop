@@ -25,16 +25,6 @@ GLFWwindow* createWindow(int width, int height, const char* title)
 	glfwMakeContextCurrent(window);
 	return window;
 }
-
-void initGLEW()
-{
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK) {
-		std::cerr << "Failed to init GLEW\n";
-		exit(-1);
-	}
-}
-
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
