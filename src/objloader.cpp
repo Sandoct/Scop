@@ -156,11 +156,11 @@ Object3D loadOBJ(const std::string& path)
                     throw std::runtime_error("Face references non-existent vertex: " + line);
 				if (vt > 0 && vt <= temp_coords.size())
 					vtIndices.push_back(vt - 1);
-				else
+				else if (!temp_coords.empty())
                     throw std::runtime_error("Face references non-existent vertex (vt): " + line);
 				if (vn > 0 && vn <= temp_normals.size())
 					vnIndices.push_back(vn - 1);
-				else
+				else if (!temp_normals.empty())
                     throw std::runtime_error("Face references non-existent vertex (vn): " + line);
 			}
 
