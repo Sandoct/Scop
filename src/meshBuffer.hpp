@@ -24,7 +24,4 @@ class MeshBuffer
 
 		void updateColors(const std::vector<float>& colors);
 
-		// For now, disable copying (we can add move semantics later)
-		MeshBuffer(const MeshBuffer&) = delete;
-		MeshBuffer& operator=(const MeshBuffer&) = delete;
 };
